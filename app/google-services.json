@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "897054529018",
+    "project_id": "jigaku-4f6d4",
+    "storage_bucket": "jigaku-4f6d4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:897054529018:android:b90b99cd740ba4eb370043",
+        "android_client_info": {
+          "package_name": "com.yugentech.jigaku"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "897054529018-64ui7gm2r6pllnq8mrbiffp0l23vpq7g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.yugentech.jigaku",
+            "certificate_hash": "3d55d31ea5ecfd411a1ac6d9a3f318e36c6f6094"
+          }
+        },
+        {
+          "client_id": "897054529018-nidl9d16clajjage1rh71keivi6afe2n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiUCWiepEJG1DeaS9YOpWwQ9m9KdtvEjI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "897054529018-nidl9d16clajjage1rh71keivi6afe2n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
