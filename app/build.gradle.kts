@@ -60,6 +60,25 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // SplashScreen
+    implementation(libs.androidx.core.splashscreen)
+
+    // Extended Icons
+    implementation(libs.androidx.material.icons.extended)
+
+    // Coil
+    implementation(libs.coil.compose)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // Datastore
+    implementation(libs.androidx.datastore.preferences)
+
+    // Accompanist
+    implementation(libs.accompanist.navigation.animation)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -68,6 +87,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.play.services.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
