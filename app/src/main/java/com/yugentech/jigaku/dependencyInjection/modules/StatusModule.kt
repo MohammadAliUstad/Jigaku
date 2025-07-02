@@ -1,4 +1,4 @@
-package com.yugentech.jigaku.di
+package com.yugentech.jigaku.dependencyInjection.modules
 
 import com.yugentech.jigaku.status.statusRepository.StatusRepository
 import com.yugentech.jigaku.status.statusRepository.StatusRepositoryImpl

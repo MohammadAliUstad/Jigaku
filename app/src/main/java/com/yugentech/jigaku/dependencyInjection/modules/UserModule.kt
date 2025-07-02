@@ -1,4 +1,4 @@
-package com.yugentech.jigaku.dependencyInjection
+package com.yugentech.jigaku.dependencyInjection.modules
 
 import com.yugentech.jigaku.user.userRepository.UserRepository
 import com.yugentech.jigaku.user.userRepository.UserRepositoryImpl

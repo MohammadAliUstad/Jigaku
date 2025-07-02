@@ -1,4 +1,4 @@
-package com.yugentech.jigaku.auth
+package com.yugentech.jigaku.authentication.authUtils
 
 sealed class AuthResult<out T> {
     data class Success<out T>(val data: T) : AuthResult<T>()

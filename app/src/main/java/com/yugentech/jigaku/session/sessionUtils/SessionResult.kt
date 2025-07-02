@@ -1,4 +1,4 @@
-package com.yugentech.jigaku.session
+package com.yugentech.jigaku.session.sessionUtils
 
 sealed class SessionResult<out T> {
     data class Success<out T>(val data: T) : SessionResult<T>()

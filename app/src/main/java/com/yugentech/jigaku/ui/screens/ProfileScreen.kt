@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,13 +27,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yugentech.jigaku.authentication.AuthViewModel
 import com.yugentech.jigaku.session.SessionViewModel
 import com.yugentech.jigaku.ui.components.SessionList
+import com.yugentech.jigaku.ui.components.StudyTimeSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,7 +118,6 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Header Section (Non-scrollable)
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surface,
@@ -131,7 +129,6 @@ fun ProfileScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Profile Picture
                         Surface(
                             modifier = Modifier
                                 .size(120.dp)
@@ -149,14 +146,12 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Username
                         Text(
                             text = user.username ?: "Anonymous",
                             style = MaterialTheme.typography.headlineMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        // Email
                         Text(
                             text = user.email ?: "No email",
                             style = MaterialTheme.typography.bodyLarge,
@@ -165,7 +160,6 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Study Time Display
                         StudyTimeSection(
                             isLoaded = sessionState.isTotalTimeLoaded,
                             formattedTime = formattedStudyTime
@@ -173,7 +167,6 @@ fun ProfileScreen(
                     }
                 }
 
-                // Sessions Section
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -206,38 +199,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StudyTimeSection(
-    isLoaded: Boolean,
-    formattedTime: String
-) {
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!isLoaded) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(
-                    text = formattedTime,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }

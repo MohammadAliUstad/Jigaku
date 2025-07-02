@@ -67,7 +67,6 @@ fun LoginScreen(
     ) {
         Spacer(modifier = Modifier.height(40.dp))
 
-        // App Title
         Text(
             text = "時学",
             style = MaterialTheme.typography.displayLarge,
@@ -89,7 +88,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Name field only in Sign Up
         AnimatedVisibility(visible = !isLogin) {
             OutlinedTextField(
                 value = name,
@@ -102,7 +100,6 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        // Email field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -120,7 +117,6 @@ fun LoginScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Password field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
@@ -145,7 +141,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Primary Button
         Button(
             onClick = {
                 scope.launch {
@@ -167,7 +162,6 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Google Sign-In
         OutlinedButton(
             onClick = { scope.launch { onGoogleSignInClick() } },
             modifier = Modifier
@@ -189,10 +183,8 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Toggle between Login / Sign Up
         TextButton(onClick = {
             isLogin = !isLogin
-            // clear fields when switching
             name = ""
             email = ""
             password = ""

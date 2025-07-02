@@ -4,43 +4,47 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yugentech.jigaku.models.Session
 import com.yugentech.jigaku.session.sessionRepository.SessionRepository
+import com.yugentech.jigaku.session.sessionUtils.SessionResult
 import com.yugentech.jigaku.session.sessionUtils.SessionState
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
+import kotlinx.coroutines.flow.*
+
+/**
+ * ViewModel responsible for managing study sessions, timer state, and total study time.
+ * It coordinates with the SessionRepository to persist data and exposes state via StateFlow for UI consumption.
+ */
 class SessionViewModel(
     private val repository: SessionRepository
 ) : ViewModel() {
 
+    // State representing all session-related UI data
     private val _sessionState = MutableStateFlow(SessionState())
     val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
 
+    // Indicates if the user is currently studying (i.e., timer is running)
     private val _isStudying = MutableStateFlow(false)
     val isStudying: StateFlow<Boolean> = _isStudying.asStateFlow()
 
+    // Duration selected by user (in seconds), default = 25 min
     private val _selectedDuration = MutableStateFlow(25 * 60)
     val selectedDuration: StateFlow<Int> = _selectedDuration.asStateFlow()
 
+    // Current countdown time (in seconds)
     private val _currentTime = MutableStateFlow(_selectedDuration.value)
     val currentTime: StateFlow<Int> = _currentTime.asStateFlow()
 
+    // UI-friendly string of total time studied
     private val _formattedStudyTime = MutableStateFlow("No sessions yet!")
     val formattedStudyTime: StateFlow<String> = _formattedStudyTime.asStateFlow()
 
-    private var timerJob: Job? = null
+    private var timerJob: Job? = null // Reference to the active timer coroutine
     private var hasInitialLoad = false
     private var hasLoadedSessions = false
     private var currentUserId: String? = null
 
     init {
-        // Update formatted time whenever total time changes
+        // Observes totalTime changes and updates formatted time string for UI
         viewModelScope.launch {
             sessionState
                 .map { it.totalTime }
@@ -52,7 +56,7 @@ class SessionViewModel(
     }
 
     /**
-     * Formats the total study time into a human-readable string
+     * Converts raw seconds into a human-readable format for display.
      */
     private fun formatTimeStudied(seconds: Long): String {
         val hours = seconds / 3600
@@ -67,18 +71,14 @@ class SessionViewModel(
     }
 
     /**
-     * Loads sessions for a user.
-     * @param userId The ID of the user
-     * @param forceRefresh Whether to force a refresh of the data even if cached
+     * Loads all study sessions for a user, unless cached or forceRefresh is true.
      */
     fun loadSessions(userId: String, forceRefresh: Boolean = false) {
         if (!forceRefresh &&
             hasLoadedSessions &&
             currentUserId == userId &&
             !sessionState.value.isSessionsLoading
-        ) {
-            return
-        }
+        ) return
 
         viewModelScope.launch {
             currentUserId = userId
@@ -88,7 +88,7 @@ class SessionViewModel(
                 is SessionResult.Success -> {
                     _sessionState.update {
                         it.copy(
-                            sessions = result.data.sortedByDescending { session -> session.timestamp },
+                            sessions = result.data.sortedByDescending { s -> s.timestamp },
                             isSessionsLoading = false,
                             error = null
                         )
@@ -113,18 +113,14 @@ class SessionViewModel(
     }
 
     /**
-     * Loads total study time for a user.
-     * @param userId The ID of the user
-     * @param forceRefresh Whether to force a refresh of the data even if cached
+     * Loads total time studied for a user, unless already loaded or forceRefresh is true.
      */
     fun loadTotalTime(userId: String, forceRefresh: Boolean = false) {
         if (!forceRefresh &&
             hasInitialLoad &&
             currentUserId == userId &&
             sessionState.value.isTotalTimeLoaded
-        ) {
-            return
-        }
+        ) return
 
         viewModelScope.launch {
             currentUserId = userId
@@ -155,36 +151,25 @@ class SessionViewModel(
                 }
 
                 is SessionResult.Loading -> {
-                    // Handle loading state if needed
+                    // Optional: Handle loading indicator
                 }
             }
         }
     }
 
     /**
-     * Forces a refresh of both total time and sessions data
+     * Triggers reloading of both session list and total time for the given user.
      */
     fun refreshData(userId: String) {
         refreshTotalTime(userId)
         refreshSessions(userId)
     }
 
-    /**
-     * Forces a refresh of the total time data
-     */
-    fun refreshTotalTime(userId: String) {
-        loadTotalTime(userId, forceRefresh = true)
-    }
+    fun refreshTotalTime(userId: String) = loadTotalTime(userId, forceRefresh = true)
+    fun refreshSessions(userId: String) = loadSessions(userId, forceRefresh = true)
 
     /**
-     * Forces a refresh of the sessions data
-     */
-    fun refreshSessions(userId: String) {
-        loadSessions(userId, forceRefresh = true)
-    }
-
-    /**
-     * Updates the selected duration for the study session
+     * Updates the selected timer duration in minutes.
      */
     fun updateSelectedDuration(minutes: Int) {
         _selectedDuration.value = minutes * 60
@@ -192,7 +177,7 @@ class SessionViewModel(
     }
 
     /**
-     * Starts the study timer if not already running
+     * Starts the countdown timer, decrementing every second.
      */
     fun startTimer() {
         if (timerJob?.isActive == true) return
@@ -211,7 +196,7 @@ class SessionViewModel(
     }
 
     /**
-     * Stops the running timer
+     * Stops the current timer coroutine and sets studying flag to false.
      */
     fun stopTimer() {
         _isStudying.value = false
@@ -220,7 +205,7 @@ class SessionViewModel(
     }
 
     /**
-     * Resets the timer to the selected duration
+     * Resets the timer back to the originally selected duration.
      */
     fun resetTimer() {
         stopTimer()
@@ -228,53 +213,40 @@ class SessionViewModel(
     }
 
     /**
-     * Returns the elapsed time in the current session
+     * Returns how much time (in seconds) has elapsed since the timer started.
      */
     fun getElapsedTime(): Int = _selectedDuration.value - _currentTime.value
 
     /**
-     * Saves a completed study session
-     * @param userId The ID of the user
-     * @param durationStudied Duration of the completed session in seconds
+     * Saves a study session to Firestore and updates total time.
+     *
+     * @param userId The user who completed the session
+     * @param durationStudied The number of seconds studied
      */
     fun saveSession(userId: String, durationStudied: Int) {
         if (durationStudied <= 0) return
 
         viewModelScope.launch {
             _sessionState.update {
-                it.copy(
-                    isSaving = true,
-                    saveSuccess = false,
-                    error = null
-                )
+                it.copy(isSaving = true, saveSuccess = false, error = null)
             }
 
             try {
                 val session = Session(duration = durationStudied)
+
                 when (val result = repository.saveSession(userId, session)) {
                     is SessionResult.Success -> {
-                        // Update total time in repository
                         repository.updateTotalTime(userId, durationStudied)
-
-                        // Refresh both total time and sessions
                         refreshData(userId)
 
                         _sessionState.update {
-                            it.copy(
-                                isSaving = false,
-                                saveSuccess = true,
-                                error = null
-                            )
+                            it.copy(isSaving = false, saveSuccess = true, error = null)
                         }
                     }
 
                     is SessionResult.Error -> {
                         _sessionState.update {
-                            it.copy(
-                                isSaving = false,
-                                saveSuccess = false,
-                                error = result.message
-                            )
+                            it.copy(isSaving = false, saveSuccess = false, error = result.message)
                         }
                     }
 
@@ -294,6 +266,9 @@ class SessionViewModel(
         }
     }
 
+    /**
+     * Ensures the timer is stopped when ViewModel is destroyed.
+     */
     override fun onCleared() {
         super.onCleared()
         stopTimer()

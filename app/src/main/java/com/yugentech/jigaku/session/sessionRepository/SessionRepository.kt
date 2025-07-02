@@ -1,7 +1,7 @@
 package com.yugentech.jigaku.session.sessionRepository
 
 import com.yugentech.jigaku.models.Session
-import com.yugentech.jigaku.session.SessionResult
+import com.yugentech.jigaku.session.sessionUtils.SessionResult
 
 interface SessionRepository {
     suspend fun saveSession(userId: String, session: Session): SessionResult<Unit>

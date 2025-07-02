@@ -41,13 +41,11 @@ fun DashboardScreen(
     val selectedDuration by sessionViewModel.selectedDuration.collectAsStateWithLifecycle()
     val currentTime by sessionViewModel.currentTime.collectAsStateWithLifecycle()
 
-    // Animations
     val animatedProgress by animateFloatAsState(
         targetValue = 1f - (currentTime / selectedDuration.toFloat()),
         animationSpec = tween(1000, easing = FastOutSlowInEasing),
         label = "TimerProgress"
     )
-
     val pulseAnimation = rememberInfiniteTransition(label = "Pulse")
     val scale by pulseAnimation.animateFloat(
         initialValue = 1f,
@@ -150,12 +148,10 @@ fun DashboardScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Timer Section
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Background Progress
                     CircularProgressIndicator(
                         progress = { 1f },
                         modifier = Modifier.size(280.dp),
@@ -164,7 +160,6 @@ fun DashboardScreen(
                         strokeCap = StrokeCap.Round
                     )
 
-                    // Actual Progress
                     CircularProgressIndicator(
                         progress = { animatedProgress },
                         modifier = Modifier.size(280.dp),
@@ -173,7 +168,6 @@ fun DashboardScreen(
                         strokeCap = StrokeCap.Round
                     )
 
-                    // Timer Display
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.scale(if (isStudying) scale else 1f)
@@ -201,7 +195,6 @@ fun DashboardScreen(
                     }
                 }
 
-                // Duration Selection
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surfaceVariant,
@@ -256,7 +249,6 @@ fun DashboardScreen(
                     }
                 }
 
-                // Control Buttons
                 AnimatedVisibility(
                     visible = isStudying,
                     enter = fadeIn() + expandVertically(),

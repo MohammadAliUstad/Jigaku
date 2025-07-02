@@ -1,9 +1,9 @@
-package com.yugentech.jigaku.repositories.authRepository
+package com.yugentech.jigaku.authentication.authRepository
 
 import android.app.PendingIntent
 import android.content.Intent
 import com.google.firebase.auth.FirebaseUser
-import com.yugentech.jigaku.auth.AuthResult
+import com.yugentech.jigaku.authentication.authUtils.AuthResult
 
 interface AuthRepository {
     suspend fun signUp(name: String, email: String, password: String): AuthResult<FirebaseUser>

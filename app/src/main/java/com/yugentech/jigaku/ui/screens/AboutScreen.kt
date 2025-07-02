@@ -131,7 +131,6 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(36.dp))
 
-            // Contact options
             ContactButton(
                 icon = Icons.Default.Email,
                 label = "Contact Developer",
