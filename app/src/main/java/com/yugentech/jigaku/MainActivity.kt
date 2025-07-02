@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.yugentech.jigaku.authentication.AuthViewModel
 import com.yugentech.jigaku.navigation.AppNavHost
 import com.yugentech.jigaku.session.SessionViewModel
+import com.yugentech.jigaku.status.StatusViewModel
 import com.yugentech.jigaku.ui.theme.JigakuTheme
 import com.yugentech.jigaku.user.UserViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -32,6 +33,7 @@ class MainActivity : ComponentActivity() {
                     val webClientId = getString(R.string.web_client_id)
                     val authViewModel: AuthViewModel = koinViewModel()
                     val sessionViewModel: SessionViewModel = koinViewModel()
+                    val statusViewModel: StatusViewModel = koinViewModel()
                     val userViewModel: UserViewModel = koinViewModel()
 
                     AppNavHost(
@@ -39,6 +41,7 @@ class MainActivity : ComponentActivity() {
                         webClientId = webClientId,
                         authViewModel = authViewModel,
                         sessionViewModel = sessionViewModel,
+                        statusViewModel = statusViewModel,
                         userViewModel = userViewModel
                     )
                 }

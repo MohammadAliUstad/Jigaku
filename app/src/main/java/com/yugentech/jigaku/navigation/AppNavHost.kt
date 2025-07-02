@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.yugentech.jigaku.authentication.AuthViewModel
 import com.yugentech.jigaku.session.SessionViewModel
+import com.yugentech.jigaku.status.StatusViewModel
 import com.yugentech.jigaku.ui.screens.AboutScreen
 import com.yugentech.jigaku.ui.screens.DashboardScreen
 import com.yugentech.jigaku.ui.screens.LeaderboardScreen
@@ -34,6 +35,7 @@ fun AppNavHost(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     sessionViewModel: SessionViewModel,
+    statusViewModel: StatusViewModel,
     userViewModel: UserViewModel,
     webClientId: String
 ) {
@@ -141,7 +143,8 @@ fun AppNavHost(
                     },
                     onNavigateToLeaderboard = {
                         navController.navigate(Screens.Leaderboard.route)
-                    }
+                    },
+                    statusViewModel = statusViewModel
                 )
             }
         }

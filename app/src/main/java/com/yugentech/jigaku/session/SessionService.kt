@@ -1,7 +1,6 @@
 package com.yugentech.jigaku.session
 
 import com.google.firebase.firestore.FirebaseFirestore
-import com.yugentech.jigaku.models.LeaderboardEntry
 import com.yugentech.jigaku.models.Session
 import kotlinx.coroutines.tasks.await
 

@@ -7,7 +7,12 @@ import com.yugentech.jigaku.session.sessionRepository.SessionRepository
 import com.yugentech.jigaku.session.sessionUtils.SessionState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SessionViewModel(
@@ -31,6 +36,7 @@ class SessionViewModel(
 
     private var timerJob: Job? = null
     private var hasInitialLoad = false
+    private var hasLoadedSessions = false
     private var currentUserId: String? = null
 
     init {
@@ -61,12 +67,57 @@ class SessionViewModel(
     }
 
     /**
+     * Loads sessions for a user.
+     * @param userId The ID of the user
+     * @param forceRefresh Whether to force a refresh of the data even if cached
+     */
+    fun loadSessions(userId: String, forceRefresh: Boolean = false) {
+        if (!forceRefresh &&
+            hasLoadedSessions &&
+            currentUserId == userId &&
+            !sessionState.value.isSessionsLoading
+        ) {
+            return
+        }
+
+        viewModelScope.launch {
+            currentUserId = userId
+            _sessionState.update { it.copy(isSessionsLoading = true) }
+
+            when (val result = repository.getSessions(userId)) {
+                is SessionResult.Success -> {
+                    _sessionState.update {
+                        it.copy(
+                            sessions = result.data.sortedByDescending { session -> session.timestamp },
+                            isSessionsLoading = false,
+                            error = null
+                        )
+                    }
+                    hasLoadedSessions = true
+                }
+
+                is SessionResult.Error -> {
+                    _sessionState.update {
+                        it.copy(
+                            error = result.message,
+                            isSessionsLoading = false
+                        )
+                    }
+                }
+
+                is SessionResult.Loading -> {
+                    _sessionState.update { it.copy(isSessionsLoading = true) }
+                }
+            }
+        }
+    }
+
+    /**
      * Loads total study time for a user.
      * @param userId The ID of the user
      * @param forceRefresh Whether to force a refresh of the data even if cached
      */
     fun loadTotalTime(userId: String, forceRefresh: Boolean = false) {
-        // Skip if data is already loaded for this user and no force refresh requested
         if (!forceRefresh &&
             hasInitialLoad &&
             currentUserId == userId &&
@@ -78,7 +129,6 @@ class SessionViewModel(
         viewModelScope.launch {
             currentUserId = userId
 
-            // Only show loading state on initial load
             if (!hasInitialLoad) {
                 _sessionState.update { it.copy(isTotalTimeLoaded = false) }
             }
@@ -94,6 +144,7 @@ class SessionViewModel(
                     }
                     hasInitialLoad = true
                 }
+
                 is SessionResult.Error -> {
                     _sessionState.update {
                         it.copy(
@@ -102,6 +153,7 @@ class SessionViewModel(
                         )
                     }
                 }
+
                 is SessionResult.Loading -> {
                     // Handle loading state if needed
                 }
@@ -110,10 +162,25 @@ class SessionViewModel(
     }
 
     /**
+     * Forces a refresh of both total time and sessions data
+     */
+    fun refreshData(userId: String) {
+        refreshTotalTime(userId)
+        refreshSessions(userId)
+    }
+
+    /**
      * Forces a refresh of the total time data
      */
     fun refreshTotalTime(userId: String) {
         loadTotalTime(userId, forceRefresh = true)
+    }
+
+    /**
+     * Forces a refresh of the sessions data
+     */
+    fun refreshSessions(userId: String) {
+        loadSessions(userId, forceRefresh = true)
     }
 
     /**
@@ -189,17 +256,18 @@ class SessionViewModel(
                         // Update total time in repository
                         repository.updateTotalTime(userId, durationStudied)
 
-                        // Update local state with new total time
-                        val updatedTotalTime = sessionState.value.totalTime + durationStudied
+                        // Refresh both total time and sessions
+                        refreshData(userId)
+
                         _sessionState.update {
                             it.copy(
-                                totalTime = updatedTotalTime,
                                 isSaving = false,
                                 saveSuccess = true,
                                 error = null
                             )
                         }
                     }
+
                     is SessionResult.Error -> {
                         _sessionState.update {
                             it.copy(
@@ -209,6 +277,7 @@ class SessionViewModel(
                             )
                         }
                     }
+
                     is SessionResult.Loading -> {
                         _sessionState.update { it.copy(isSaving = true) }
                     }

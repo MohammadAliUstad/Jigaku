@@ -15,7 +15,8 @@ data class UserUiState(
     val users: List<User> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val formattedTimes: Map<String, String> = emptyMap()
+    val formattedTimes: Map<String, String> = emptyMap(),
+    val refreshing: Boolean = false
 )
 
 class UserViewModel(
@@ -35,6 +36,21 @@ class UserViewModel(
     }
 
     /**
+     * Formats study time into a human-readable string with improved formatting
+     */
+    private fun formatTimeStudied(seconds: Long): String {
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
+
+        return when {
+            hours > 0 && minutes > 0 -> "$hours hr ${minutes} min"
+            hours > 0 -> "$hours hr"
+            minutes > 0 -> "$minutes min"
+            else -> "Just started"
+        }
+    }
+
+    /**
      * Starts listening to real-time user status updates
      */
     fun startListeningToUserStatuses() {
@@ -47,7 +63,7 @@ class UserViewModel(
                         statusUpdates[user.userId]?.let { newStatus ->
                             user.copy(isStudying = newStatus)
                         } ?: user
-                    }
+                    }.sortedByDescending { it.totalTimeStudied }
                     currentState.copy(users = updatedUsers)
                 }
             }
@@ -60,21 +76,6 @@ class UserViewModel(
     fun stopListeningToUserStatuses() {
         statusListenerJob?.cancel()
         statusListenerJob = null
-    }
-
-    /**
-     * Formats study time into a human-readable string
-     */
-    private fun formatTimeStudied(seconds: Long): String {
-        val hours = seconds / 3600
-        val minutes = (seconds % 3600) / 60
-
-        return when {
-            hours > 0 && minutes > 0 -> "Studied: $hours hour${if (hours != 1L) "s" else ""} $minutes minute${if (minutes != 1L) "s" else ""}"
-            hours > 0 -> "Studied: $hours hour${if (hours != 1L) "s" else ""}"
-            minutes > 0 -> "Studied: $minutes minute${if (minutes != 1L) "s" else ""}"
-            else -> "No sessions yet!"
-        }
     }
 
     /**
@@ -91,13 +92,13 @@ class UserViewModel(
      * Gets formatted time for a specific user
      */
     fun getFormattedTimeForUser(userId: String): String {
-        return _uiState.value.formattedTimes[userId] ?: "No sessions yet!"
+        return _uiState.value.formattedTimes[userId] ?: "Just started"
     }
 
     /**
      * Loads users with caching
      */
-    fun loadUsers(withStatus: Boolean = true, forceRefresh: Boolean = false) {
+    private fun loadUsers(withStatus: Boolean = true, forceRefresh: Boolean = false) {
         // Skip if data is already loaded and cache is still valid
         if (!forceRefresh &&
             hasInitialLoad &&
@@ -107,9 +108,12 @@ class UserViewModel(
             return
         }
 
-        // Only show loading on initial load
-        if (!hasInitialLoad) {
-            _uiState.update { it.copy(isLoading = true) }
+        // Show loading state appropriately
+        _uiState.update {
+            it.copy(
+                isLoading = !hasInitialLoad,
+                refreshing = hasInitialLoad
+            )
         }
 
         viewModelScope.launch {
@@ -121,11 +125,13 @@ class UserViewModel(
                 }
 
                 result.onSuccess { users ->
-                    updateFormattedTimes(users)
+                    val sortedUsers = users.sortedByDescending { it.totalTimeStudied }
+                    updateFormattedTimes(sortedUsers)
                     _uiState.update {
                         it.copy(
-                            users = users,
+                            users = sortedUsers,
                             isLoading = false,
+                            refreshing = false,
                             error = null
                         )
                     }
@@ -139,8 +145,9 @@ class UserViewModel(
                 }.onFailure { e ->
                     _uiState.update { currentState ->
                         currentState.copy(
-                            error = e.message ?: "Unknown error occurred",
+                            error = e.message ?: "Failed to load users",
                             isLoading = false,
+                            refreshing = false,
                             users = currentState.users,
                             formattedTimes = currentState.formattedTimes
                         )
@@ -149,8 +156,9 @@ class UserViewModel(
             } catch (e: Exception) {
                 _uiState.update { currentState ->
                     currentState.copy(
-                        error = e.message ?: "Unknown error occurred",
+                        error = e.message ?: "An unexpected error occurred",
                         isLoading = false,
+                        refreshing = false,
                         users = currentState.users,
                         formattedTimes = currentState.formattedTimes
                     )
@@ -160,15 +168,12 @@ class UserViewModel(
     }
 
     /**
-     * Forces a refresh of user data
+     * Forces a refresh of user data and their statuses
      */
-    fun refreshUsers() {
+    fun refreshUserStatuses() {
         loadUsers(withStatus = true, forceRefresh = true)
     }
 
-    /**
-     * Cleans up resources when ViewModel is cleared
-     */
     override fun onCleared() {
         super.onCleared()
         stopListeningToUserStatuses()
