@@ -1,20 +1,47 @@
 package com.yugentech.jigaku.ui.screens
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Leaderboard
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -45,16 +72,6 @@ fun DashboardScreen(
         targetValue = 1f - (currentTime / selectedDuration.toFloat()),
         animationSpec = tween(1000, easing = FastOutSlowInEasing),
         label = "TimerProgress"
-    )
-    val pulseAnimation = rememberInfiniteTransition(label = "Pulse")
-    val scale by pulseAnimation.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "PulseScale"
     )
 
     LaunchedEffect(isStudying) {
@@ -99,7 +116,11 @@ fun DashboardScreen(
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ) {
                 NavigationBarItem(
                     selected = false,
                     onClick = onNavigateToLeaderboard,
@@ -170,21 +191,14 @@ fun DashboardScreen(
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.scale(if (isStudying) scale else 1f)
+                        modifier = Modifier.scale(1f)
                     ) {
-                        AnimatedContent(
-                            targetState = currentTime,
-                            transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
-                            },
-                            label = "TimeDisplay"
-                        ) { time ->
-                            Text(
-                                text = String.format("%02d:%02d", time / 60, time % 60),
-                                style = MaterialTheme.typography.displayLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+
+                        Text(
+                            text = String.format("%02d:%02d", currentTime / 60, currentTime % 60),
+                            style = MaterialTheme.typography.displayLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
 
                         Text(
                             "minutes remaining",
@@ -260,11 +274,15 @@ fun DashboardScreen(
                             .padding(top = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
+                        Button(
                             onClick = { sessionViewModel.stopTimer() },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)
                         ) {
-                            Text("Stop")
+                            Text(
+                                text = "Stop",
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
 
                         Button(
